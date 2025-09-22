@@ -1,0 +1,91 @@
+import os
+import pickle
+import numpy as np
+import pandas as pd
+import json
+import random
+from flask import Flask, render_template, request, jsonify, session, redirect
+from input_validation import validate_input_ranges
+from formatters import format_results
+
+# Initialize Flask app
+app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Required for session handling
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    if not request.method == 'POST':
+        return redirect('/')
+
+    try:
+        form_data = request.form.to_dict()
+        
+        # Validate input ranges
+        is_valid, validation_error = validate_input_ranges(form_data)
+        if not is_valid:
+            return render_template('index.html', error_message=validation_error)
+        
+        feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall', 'SOC']
+        
+        try:
+            input_features = [float(form_data[name]) for name in feature_names]
+            input_df = pd.DataFrame([input_features], columns=feature_names)
+            scaled_input = scaler.transform(input_df)
+            prediction = model.predict(scaled_input)[0]
+            probabilities = model.predict_proba(scaled_input)[0]
+            confidence = max(probabilities)
+        except Exception as e:
+            return render_template('index.html', 
+                error_message="Error processing input data. Please check your values.")
+        
+        # Create structured data for advice generation
+        structured_data = {
+            'inputs': {name: float(form_data[name]) for name in feature_names},
+            'prediction': prediction,
+            'confidence': confidence
+        }
+        
+        # Handle disease detection
+        disease_info = None
+        if 'disease_symptoms' in form_data and form_data['disease_symptoms'].strip():
+            try:
+                disease_info = simulate_disease_detection(form_data['disease_symptoms'], prediction)
+            except Exception as e:
+                return render_template('index.html', 
+                    error_message="Error in disease detection. Please try again.")
+        
+        # Generate comprehensive advice
+        try:
+            advice_sections = get_comprehensive_advice(structured_data, disease_info)
+            session['advice_sections'] = advice_sections
+            session['disease_info'] = disease_info
+            return redirect('/results')
+        except Exception as e:
+            return render_template('index.html', 
+                error_message="Error generating advice. Please try again.")
+            
+    except Exception as e:
+        return render_template('index.html', 
+            error_message="An unexpected error occurred. Please try again.")
+
+@app.route('/results')
+def results():
+    # Get analysis results from session
+    advice_sections = session.get('advice_sections')
+    disease_info = session.get('disease_info')
+    
+    if not advice_sections:
+        return redirect('/')
+    
+    # Format the results using the formatter module
+    formatted_sections = format_results(advice_sections, disease_info)
+    
+    return render_template('results.html', 
+                         advice_sections=formatted_sections,
+                         disease_info=disease_info)
+
+# Keep the rest of your existing functions (simulate_disease_detection, get_comprehensive_advice, etc.)

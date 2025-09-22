@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    {"id": "r1", "text": "Apply 50 kg/ha of nitrogen at planting."},
+    {"id": "r2", "text": "Irrigate twice per week during fruiting."}
+  ],
+  "data_summary": {"soil_n": 12, "rainfall_mm": 200, "crop": "maize"}
+}

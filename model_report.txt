@@ -1,0 +1,24 @@
+
+SMART AGRICULTURAL ADVISOR - MODEL REPORT
+=========================================
+
+Model Type: Random Forest Classifier
+Training Date: 2025-09-12 02:12:51
+
+Feature Set:
+N, P, K, temperature, humidity, ph, rainfall, SOC
+
+Model Parameters:
+- Estimators: 200
+- Max Depth: 10
+- Min Samples Split: 2
+- Min Samples Leaf: 2
+
+Performance Metrics:
+- Training completed successfully
+- Cross-validation implemented
+- Feature importance analyzed
+- Model saved as 'model.pkl'
+- Scaler saved as 'scaler.pkl'
+
+Supported Crops: 20

@@ -1,0 +1,15 @@
+Flask
+pandas
+numpy
+scikit-learn
+Werkzeug
+Jinja2
+MarkupSafe
+itsdangerous
+click
+setuptools
+python-dotenv
+requests
+pytest
+tensorflow
+scipy
