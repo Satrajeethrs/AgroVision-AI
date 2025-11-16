@@ -1,0 +1,5 @@
+# Processed Data Directory
+
+This directory stores processed/transformed data files generated during analysis or training.
+
+Files in this directory are typically excluded from version control.

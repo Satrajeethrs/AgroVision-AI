@@ -1,0 +1,25 @@
+# Models Directory
+
+This directory contains the trained machine learning models for AgroVision-AI.
+
+## Files
+
+- `model.pkl` - Crop recommendation Random Forest model
+- `scaler.pkl` - Feature scaler for input normalization
+- `plant_disease_model_final.h5` - Final plant disease detection CNN model
+- `plant_disease_model_best.h5` - Best checkpoint during training
+- `plant_disease_class_indices.npy` - Mapping of class names to indices
+
+## Generating Models
+
+To generate these model files, run:
+
+```bash
+# Crop recommendation model
+python src/core/train_model.py
+
+# Plant disease detection model
+python src/core/train_plant_disease_model.py
+```
+
+**Note**: Model files are large and are excluded from version control via `.gitignore`.
