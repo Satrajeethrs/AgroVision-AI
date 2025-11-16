@@ -5,10 +5,10 @@ import pandas as pd
 import json
 import random
 from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory
-from input_validation import validate_input_ranges
-from formatters import format_results
-from llm_validator import generate_recommendation_text, validate_recommendations
-from llm_validator import generate_alternative_recommendation
+from src.utils.input_validation import validate_input_ranges
+from src.utils.formatters import format_results
+from src.utils.llm_validator import generate_recommendation_text, validate_recommendations
+from src.utils.llm_validator import generate_alternative_recommendation
 import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image as keras_image
@@ -34,18 +34,18 @@ def load_model_and_scaler():
     global model, scaler
     try:
         # Load the trained model
-        with open('model.pkl', 'rb') as f:
+        with open('models/model.pkl', 'rb') as f:
             model = pickle.load(f)
         print("Model loaded successfully!")
 
         # Load the scaler
-        with open('scaler.pkl', 'rb') as f:
+        with open('models/scaler.pkl', 'rb') as f:
             scaler = pickle.load(f)
         print("Scaler loaded successfully!")
         return True
     except FileNotFoundError as e:
         print(f"Error loading files: {e}")
-        print("Please run train_model.py first to generate model.pkl and scaler.pkl")
+        print("Please run src/core/train_model.py first to generate model.pkl and scaler.pkl")
         return False
 
 @app.route('/')
@@ -72,8 +72,8 @@ def analyze():
                 img_path = tmp.name
             # Load DL model and class indices
             try:
-                dl_model = load_model('plant_disease_model_final.h5')
-                class_indices = np.load('plant_disease_class_indices.npy', allow_pickle=True).item()
+                dl_model = load_model('models/plant_disease_model_final.h5')
+                class_indices = np.load('models/plant_disease_class_indices.npy', allow_pickle=True).item()
                 idx_to_class = {v: k for k, v in class_indices.items()}
                 img = keras_image.load_img(img_path, target_size=(128, 128))
                 x = keras_image.img_to_array(img) / 255.0
@@ -273,7 +273,7 @@ def get_comprehensive_advice(data, disease_info=None):
     confidence = data.get('confidence', 0.5)
     
     # Load fertilizer recommendations
-    fertilizer_df = pd.read_csv('fertilizer.csv')
+    fertilizer_df = pd.read_csv('data/raw/fertilizer.csv')
     crop_fertilizer = fertilizer_df[fertilizer_df['Crop'].str.lower() == prediction.lower()].iloc[0] if len(fertilizer_df[fertilizer_df['Crop'].str.lower() == prediction.lower()]) > 0 else None
     
     # Calculate status indicators
@@ -690,7 +690,7 @@ def generate_fertilizer_action_items(n_status, p_status, k_status, crop):
     actions = []
     
     # Load crop-specific requirements
-    fertilizer_df = pd.read_csv('fertilizer.csv')
+    fertilizer_df = pd.read_csv('data/raw/fertilizer.csv')
     crop_req = fertilizer_df[fertilizer_df['Crop'].str.lower() == crop.lower()].iloc[0] if len(fertilizer_df[fertilizer_df['Crop'].str.lower() == crop.lower()]) > 0 else None
     
     # Add nutrient-specific recommendations
