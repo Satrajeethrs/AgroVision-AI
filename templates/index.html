@@ -36,11 +36,16 @@
             </div>
             <h1 class="text-center">🌾 {{ t('ui.app_title') }}</h1>
             <p class="lead text-center">{{ t('ui.app_subtitle') }}</p>
-            <div class="text-center">
+            <div class="text-center mb-3">
                 <span class="badge bg-light text-dark me-2">{{ t('ui.for_farmers') }}</span>
                 <span class="badge bg-light text-dark me-2">{{ t('ui.ml_powered') }}</span>
                 <span class="badge bg-light text-dark me-2">{{ t('ui.professional') }}</span>
                 <span class="badge bg-light text-dark">{{ t('ui.realtime_analysis') }}</span>
+            </div>
+            <div class="text-center">
+                <a href="/chatbot" class="btn btn-success btn-lg">
+                    🤖 {{ t('nav.ai_chatbot') if t('nav.ai_chatbot') else 'AI Chatbot Assistant' }}
+                </a>
             </div>
         </div>
     </div>

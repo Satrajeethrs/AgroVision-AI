@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('chatbot.title') }} - {{ t('ui.app_title') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <a href="/" class="btn btn-outline-light btn-sm">
+                    ← {{ t('nav.back_to_home') }}
+                </a>
+                <!-- Language Selector -->
+                <div class="language-selector">
+                    <label for="language-select" class="me-2" style="color: white; font-weight: 500;">🌐 Language:</label>
+                    <select id="language-select" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                        <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                        <option value="hi" {% if session.get('language') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                        <option value="ta" {% if session.get('language') == 'ta' %}selected{% endif %}>தமிழ் (Tamil)</option>
+                        <option value="te" {% if session.get('language') == 'te' %}selected{% endif %}>తెలుగు (Telugu)</option>
+                        <option value="bn" {% if session.get('language') == 'bn' %}selected{% endif %}>বাংলা (Bengali)</option>
+                        <option value="mr" {% if session.get('language') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                        <option value="kn" {% if session.get('language') == 'kn' %}selected{% endif %}>ಕನ್ನಡ (Kannada)</option>
+                        <option value="ml" {% if session.get('language') == 'ml' %}selected{% endif %}>മലയാളം (Malayalam)</option>
+                        <option value="gu" {% if session.get('language') == 'gu' %}selected{% endif %}>ગુજરાતી (Gujarati)</option>
+                        <option value="pa" {% if session.get('language') == 'pa' %}selected{% endif %}>ਪੰਜਾਬੀ (Punjabi)</option>
+                        <option value="or" {% if session.get('language') == 'or' %}selected{% endif %}>ଓଡ଼ିଆ (Odia)</option>
+                        <option value="as" {% if session.get('language') == 'as' %}selected{% endif %}>অসমীয়া (Assamese)</option>
+                    </select>
+                </div>
+            </div>
+            <h1 class="text-center">🤖 {{ t('chatbot.title') }}</h1>
+            <p class="lead text-center">{{ t('chatbot.subtitle') }}</p>
+        </div>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <!-- Chat Configuration Card -->
+                <div class="card mb-3" id="config-card">
+                    <div class="card-body">
+                        <h5 class="card-title">⚙️ {{ t('chatbot.configuration') }}</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="provider-select" class="form-label">{{ t('chatbot.provider') }}</label>
+                                <select id="provider-select" class="form-select">
+                                    <option value="auto">{{ t('chatbot.auto_detect') }}</option>
+                                    <option value="gemini">Google Gemini</option>
+                                    <option value="lmstudio">LM Studio (Local)</option>
+                                    <option value="openai">OpenAI</option>
+                                </select>
+                                <div class="form-text">{{ t('chatbot.provider_help') }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t('chatbot.status') }}</label>
+                                <div id="status-indicator" class="alert alert-info mb-0">
+                                    <span id="status-icon">⏳</span>
+                                    <span id="status-text">{{ t('chatbot.initializing') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="init-btn" class="btn btn-primary">
+                            🚀 {{ t('chatbot.start') }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Window -->
+                <div class="card chat-container" id="chat-container" style="display: none;">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">💬 {{ t('chatbot.conversation') }}</h5>
+                            <small id="provider-info"></small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light me-2" id="export-btn" title="{{ t('chatbot.export') }}">
+                                📥 {{ t('chatbot.export') }}
+                            </button>
+                            <button class="btn btn-sm btn-danger" id="clear-btn" title="{{ t('chatbot.clear') }}">
+                                🗑️ {{ t('chatbot.clear') }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body chat-messages" id="chat-messages">
+                        <!-- Messages will be appended here -->
+                    </div>
+                    <div class="card-footer">
+                        <form id="chat-form">
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="user-input" 
+                                    placeholder="{{ t('chatbot.type_message') }}"
+                                    autocomplete="off"
+                                >
+                                <button class="btn btn-success" type="submit" id="send-btn">
+                                    <span id="send-icon">📤</span>
+                                    <span id="send-text">{{ t('chatbot.send') }}</span>
+                                </button>
+                            </div>
+                        </form>
+                        <div class="text-muted small mt-2">
+                            💡 {{ t('chatbot.tips') }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Questions Card -->
+                <div class="card mt-3" id="samples-card" style="display: none;">
+                    <div class="card-body">
+                        <h6 class="card-title">💡 {{ t('chatbot.sample_questions') }}</h6>
+                        <div class="d-flex flex-wrap gap-2" id="sample-questions">
+                            <!-- Sample questions will be added dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">ℹ️ {{ t('chatbot.about') }}</h6>
+                        <p class="mb-2">{{ t('chatbot.about_text') }}</p>
+                        <ul class="small mb-0">
+                            <li>{{ t('chatbot.feature1') }}</li>
+                            <li>{{ t('chatbot.feature2') }}</li>
+                            <li>{{ t('chatbot.feature3') }}</li>
+                            <li>{{ t('chatbot.feature4') }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+    
+    <script>
+        // Language selector
+        document.getElementById('language-select').addEventListener('change', function() {
+            const selectedLang = this.value;
+            fetch('/set_language', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ language: selectedLang })
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            });
+        });
+
+        // Pass translations to JavaScript
+        window.TRANSLATIONS = {
+            currentLang: '{{ current_lang() }}',
+            welcome: '{{ t("chatbot.welcome") }}',
+            you: '{{ t("chatbot.you") }}',
+            bot: '{{ t("chatbot.bot") }}',
+            thinking: '{{ t("chatbot.thinking") }}',
+            error: '{{ t("chatbot.error") }}',
+            cleared: '{{ t("chatbot.cleared") }}',
+            ready: '{{ t("chatbot.ready") }}',
+            connected: '{{ t("chatbot.connected") }}'
+        };
+
+        // Sample questions based on language
+        window.SAMPLE_QUESTIONS = {
+            'en': [
+                'What fertilizer should I use for rice?',
+                'How do I improve soil pH?',
+                'What are signs of nitrogen deficiency?',
+                'Best time to plant wheat?',
+                'How to prevent pest attacks?'
+            ],
+            'hi': [
+                'धान के लिए कौन सा उर्वरक उपयोग करें?',
+                'मिट्टी का pH कैसे सुधारें?',
+                'नाइट्रोजन की कमी के लक्षण क्या हैं?',
+                'गेहूं बोने का सही समय?',
+                'कीटों से बचाव कैसे करें?'
+            ]
+            // Add more languages as needed
+        };
+    </script>
+</body>
+</html>

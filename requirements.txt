@@ -10,6 +10,10 @@ click
 setuptools
 python-dotenv
 requests
+
+# Chatbot support (requests already included above)
+# google-generativeai  # Optional: for direct Gemini SDK
+# openai  # Optional: for OpenAI SDK (we use requests for flexibility)
 pytest
 tensorflow
 scipy

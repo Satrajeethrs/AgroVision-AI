@@ -11,12 +11,20 @@ services:
     volumes:
       # Persist uploaded images
       - ./data:/app/data
+      # Provide trained models (if available on host)
+      - ./models:/app/models:ro
       # Cache HuggingFace models to avoid re-downloading
       - huggingface_cache:/root/.cache/huggingface
     environment:
       # Pass HF token from host environment or .env file
       - HF_TOKEN=${HF_TOKEN}
       - HUGGINGFACE_HUB_TOKEN=${HF_TOKEN}
+      # AI Providers (optional; auto-detects what's set)
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LMSTUDIO_API_KEY=${LMSTUDIO_API_KEY}
+      # LM Studio runs on host; container should call host.docker.internal
+      - LMSTUDIO_BASE_URL=${LMSTUDIO_BASE_URL:-http://host.docker.internal:1234}
       # Flask configuration
       - FLASK_DEBUG=0
       - FLASK_ENV=production

@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     git \
+    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -28,12 +30,17 @@ RUN mkdir -p models data/processed data/raw translations
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV FLASK_APP=app.py
 ENV SKIP_INDICTRANS2_MODELS=0
 ENV TOKENIZERS_PARALLELISM=false
 ENV RAYON_NUM_THREADS=2
 ENV OMP_NUM_THREADS=2
 ENV MKL_NUM_THREADS=2
+# Default LM Studio inside container to host.docker.internal (macOS/Windows)
+ENV LMSTUDIO_BASE_URL=http://host.docker.internal:1234
+ENV GEMINI_API_KEY=""
+ENV OPENAI_API_KEY=""
 
 # Expose Flask port
 EXPOSE 5001
