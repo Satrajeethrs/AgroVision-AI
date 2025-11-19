@@ -1,5 +1,28 @@
+// Translation cache and helper function
+let translationCache = {};
+
+async function getTranslations(keys) {
+    const uncachedKeys = keys.filter(k => !translationCache[k]);
+    if (uncachedKeys.length > 0) {
+        try {
+            const resp = await fetch('/api/translate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({keys: uncachedKeys})
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                Object.assign(translationCache, data.translations);
+            }
+        } catch (e) {
+            console.error('Translation fetch error:', e);
+        }
+    }
+    return keys.map(k => translationCache[k] || k);
+}
+
 // Handle sidebar navigation
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const sidebarButtons = document.querySelectorAll('.sidebar-btn');
     const contentSections = document.querySelectorAll('.content-section');
 
@@ -24,6 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Preload translations for toggle button
+    const [hideText, showText] = await getTranslations(['button.hide_raw', 'button.show_raw']);
+
     // Toggle raw AI response display
     const toggleBtn = document.getElementById('toggle-raw');
     if (toggleBtn) {
@@ -32,24 +58,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!pre) return;
             if (pre.style.display === 'none') {
                 pre.style.display = 'block';
-                toggleBtn.innerText = 'Hide raw response';
+                toggleBtn.innerText = hideText;
             } else {
                 pre.style.display = 'none';
-                toggleBtn.innerText = 'Show raw response';
+                toggleBtn.innerText = showText;
             }
         });
     }
 });
 
 // Validate recommendations on demand
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const validateBtn = document.getElementById('btn-validate');
     const resultsDiv = document.getElementById('validation-results');
     if (!validateBtn || !resultsDiv) return;
 
+    // Preload validation translations
+    const [validatingText, validateText, idText, verdictText, confText, notesText] = 
+        await getTranslations([
+            'btn.validating',
+            'button.validate_recommendations',
+            'validation.id',
+            'validation.verdict',
+            'validation.confidence',
+            'validation.notes'
+        ]);
+
     validateBtn.addEventListener('click', async () => {
         validateBtn.disabled = true;
-        validateBtn.innerText = 'Validating...';
+        validateBtn.innerText = validatingText;
         resultsDiv.innerHTML = '';
         try {
             const resp = await fetch('/validate_recs', {method: 'POST'});
@@ -68,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 resultsDiv.innerHTML = `
                     <div class="table-responsive mt-2">
                         <table class="table table-sm table-bordered">
-                            <thead><tr><th>ID</th><th>Verdict</th><th>Conf</th><th>Notes</th></tr></thead>
+                            <thead><tr><th>${idText}</th><th>${verdictText}</th><th>${confText}</th><th>${notesText}</th></tr></thead>
                             <tbody>${rows}</tbody>
                         </table>
                     </div>`;
@@ -77,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resultsDiv.innerHTML = `<div class="alert alert-danger">${e}</div>`;
         } finally {
             validateBtn.disabled = false;
-            validateBtn.innerText = 'Validate recommendations';
+            validateBtn.innerText = validateText;
         }
     });
 });

@@ -31,6 +31,14 @@ class Config:
     ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
     ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-3-sonnet-20240229')
     
+    # Translation Configuration (AI4Bharat IndicTrans2 - Open Source, NO API KEY REQUIRED)
+    ENABLE_TRANSLATION = os.getenv('ENABLE_TRANSLATION', 'True') == 'True'
+    DEFAULT_LANGUAGE = os.getenv('DEFAULT_LANGUAGE', 'en')
+    TRANSLATION_CACHE_SIZE = int(os.getenv('TRANSLATION_CACHE_SIZE', 1000))
+    
+    # Supported languages (12 Indian languages)
+    SUPPORTED_LANGUAGES = ['en', 'hi', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa', 'or', 'as']
+    
     # Model paths
     MODEL_PATH = BASE_DIR / os.getenv('MODEL_PATH', 'models/model.pkl')
     SCALER_PATH = BASE_DIR / os.getenv('SCALER_PATH', 'models/scaler.pkl')

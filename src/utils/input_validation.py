@@ -1,29 +1,36 @@
 """Input validation functions for the crop recommendation system."""
 
-def validate_input_ranges(data):
+from src.utils.translation import t
+
+def validate_input_ranges(data, lang='en'):
     """
     Validate input ranges for all parameters.
     Returns (is_valid, error_message)
     """
     validation_rules = {
-        'N': {'min': 0, 'max': 200, 'name': 'Nitrogen'},
-        'P': {'min': 5, 'max': 150, 'name': 'Phosphorus'},
-        'K': {'min': 5, 'max': 200, 'name': 'Potassium'},
-        'temperature': {'min': 15, 'max': 45, 'name': 'Temperature'},
-        'humidity': {'min': 30, 'max': 100, 'name': 'Humidity'},
-        'ph': {'min': 3, 'max': 10, 'name': 'pH'},
-        'rainfall': {'min': 100, 'max': 3000, 'name': 'Rainfall'}
+        'N': {'min': 0, 'max': 200, 'key': 'field.nitrogen'},
+        'P': {'min': 5, 'max': 150, 'key': 'field.phosphorus'},
+        'K': {'min': 5, 'max': 200, 'key': 'field.potassium'},
+        'temperature': {'min': 15, 'max': 45, 'key': 'field.temperature'},
+        'humidity': {'min': 30, 'max': 100, 'key': 'field.humidity'},
+        'ph': {'min': 3, 'max': 10, 'key': 'field.ph'},
+        'rainfall': {'min': 100, 'max': 3000, 'key': 'field.rainfall'}
     }
     
     for field, rules in validation_rules.items():
+        field_name = t(rules['key'], lang)
+        
         if field not in data:
-            return False, f"Missing required field: {rules['name']}"
+            error_msg = t('error.missing_field', lang)
+            return False, f"{error_msg}: {field_name}"
         
         try:
             value = float(data[field])
             if value < rules['min'] or value > rules['max']:
-                return False, f"{rules['name']} must be between {rules['min']} and {rules['max']}"
+                error_msg = t('error.out_of_range', lang)
+                return False, f"{field_name} {error_msg} {rules['min']} - {rules['max']}"
         except ValueError:
-            return False, f"Invalid value for {rules['name']}"
+            error_msg = t('error.invalid_value', lang)
+            return False, f"{error_msg}: {field_name}"
     
     return True, None

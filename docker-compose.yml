@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  agrovision:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agrovision-ai
+    ports:
+      - "5001:5001"
+    volumes:
+      # Persist uploaded images
+      - ./data:/app/data
+      # Cache HuggingFace models to avoid re-downloading
+      - huggingface_cache:/root/.cache/huggingface
+    environment:
+      # Pass HF token from host environment or .env file
+      - HF_TOKEN=${HF_TOKEN}
+      - HUGGINGFACE_HUB_TOKEN=${HF_TOKEN}
+      # Flask configuration
+      - FLASK_DEBUG=0
+      - FLASK_ENV=production
+      # Translation settings
+      - ENABLE_TRANSLATION=True
+      - DEFAULT_LANGUAGE=en
+      - TRANSLATION_CACHE_SIZE=1000
+      - SKIP_INDICTRANS2_MODELS=0
+      # Stability settings
+      - TOKENIZERS_PARALLELISM=false
+      - RAYON_NUM_THREADS=2
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
+    restart: unless-stopped
+    mem_limit: 14g
+    shm_size: 2g
+    cpus: 2.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  huggingface_cache:
+    driver: local
