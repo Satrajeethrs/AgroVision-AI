@@ -11,6 +11,7 @@ from src.utils.formatters import format_results
 from src.utils.llm_validator import generate_recommendation_text, validate_recommendations
 from src.utils.llm_validator import generate_alternative_recommendation
 from src.utils.translation import get_translation_service, t, translate, get_supported_languages
+from src.utils.chatbot import create_chatbot
 import re
 import tempfile
 from flask import jsonify
@@ -1075,15 +1076,192 @@ def validate_recs_route():
     out = validate_recommendations(recs, data_summary)
     return jsonify(out)
 
+
+# ============================================================================
+# CHATBOT ROUTES
+# ============================================================================
+
+@app.route('/chatbot')
+def chatbot_page():
+    """Render the chatbot interface."""
+    # Set default language if not in session
+    if 'language' not in session:
+        session['language'] = 'en'
+    return render_template('chatbot.html')
+
+
+@app.route('/api/chatbot/init', methods=['POST'])
+def chatbot_init():
+    """Initialize a new chatbot session."""
+    try:
+        data = request.get_json() or {}
+        language = session.get('language', 'en')
+        provider = data.get('provider', 'auto')
+        
+        # Create chatbot instance and store in session
+        # Note: We create a new instance for each init to avoid session serialization issues
+        session['chatbot_config'] = {
+            'language': language,
+            'provider': provider,
+            'initialized': True
+        }
+        
+        # Get any context from previous analysis
+        context = {}
+        advice_sections = session.get('advice_sections')
+        if advice_sections and 'crop_recommendation' in advice_sections:
+            # Extract crop info if available
+            context['has_analysis'] = True
+        
+        logger.info(f"Chatbot initialized for language: {language}, provider: {provider}")
+        
+        return jsonify({
+            'status': 'success',
+            'language': language,
+            'provider': provider,
+            'context': context,
+            'welcome_message': t('chatbot.welcome', language)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error initializing chatbot: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/chatbot/chat', methods=['POST'])
+def chatbot_chat():
+    """Handle chat messages."""
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({
+                'status': 'error',
+                'message': 'Message is required'
+            }), 400
+        
+        # Get chatbot config from session
+        chatbot_config = session.get('chatbot_config')
+        if not chatbot_config or not chatbot_config.get('initialized'):
+            return jsonify({
+                'status': 'error',
+                'message': 'Chatbot not initialized. Please refresh the page.'
+            }), 400
+        
+        language = chatbot_config.get('language', 'en')
+        provider = chatbot_config.get('provider', 'auto')
+        
+        # Get conversation history from session
+        if 'chatbot_history' not in session:
+            session['chatbot_history'] = []
+        
+        # Create chatbot instance
+        chatbot = create_chatbot(language=language, provider=provider)
+        
+        # Set conversation history
+        chatbot.conversation_history = session['chatbot_history']
+        
+        # Set context from user's analysis if available
+        advice_sections = session.get('advice_sections')
+        if advice_sections:
+            context = {}
+            # Extract crop recommendation
+            crop_rec = advice_sections.get('crop_recommendation', {})
+            if crop_rec:
+                context['has_analysis'] = True
+                # You can add more context extraction here
+            chatbot.set_context(context)
+        
+        # Get response
+        result = chatbot.chat(user_message)
+        
+        # Update session history
+        session['chatbot_history'] = chatbot.conversation_history
+        session.modified = True
+        
+        if result['success']:
+            return jsonify({
+                'status': 'success',
+                'response': result['response'],
+                'provider': result['provider'],
+                'timestamp': result['timestamp']
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error', 'Unknown error'),
+                'response': result['response']
+            }), 500
+    
+    except Exception as e:
+        logger.error(f"Error in chatbot chat: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'response': t('chatbot.error', session.get('language', 'en'))
+        }), 500
+
+
+@app.route('/api/chatbot/clear', methods=['POST'])
+def chatbot_clear():
+    """Clear chat history."""
+    try:
+        session['chatbot_history'] = []
+        session.modified = True
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Chat history cleared'
+        })
+    
+    except Exception as e:
+        logger.error(f"Error clearing chat history: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/chatbot/export', methods=['GET'])
+def chatbot_export():
+    """Export conversation history."""
+    try:
+        history = session.get('chatbot_history', [])
+        config = session.get('chatbot_config', {})
+        
+        export_data = {
+            'language': config.get('language', 'en'),
+            'provider': config.get('provider', 'auto'),
+            'history': history,
+            'timestamp': pd.Timestamp.now().isoformat()
+        }
+        
+        return jsonify({
+            'status': 'success',
+            'data': export_data
+        })
+    
+    except Exception as e:
+        logger.error(f"Error exporting chat history: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
 if __name__ == '__main__':
     print("🚀 Starting AgroVision-AI application...")
     print("📦 Loading models and scaler...")
     if load_model_and_scaler():
         print("✅ Models loaded successfully!")
-        print(f"🌐 Starting Flask server on http://0.0.0.0:5001 (Docker-friendly)")
-        # Avoid multi-process reloader and extra threads on macOS to prevent native mutex issues
-        debug_flag = os.getenv("FLASK_DEBUG", "0") == "1"
-        # Bind to 0.0.0.0 so Docker port mapping exposes the service to host
-        app.run(host="0.0.0.0", debug=debug_flag, port=5001, use_reloader=False, threaded=False)
     else:
-        print("❌ Failed to start the application due to missing model files.")
+        print("⚠️ Models not found. The app will start, and the UI will show an error on analyze until models are provided in 'models/'.")
+    print(f"🌐 Starting Flask server on http://0.0.0.0:5001 (Docker-friendly)")
+    # Avoid multi-process reloader and extra threads on macOS to prevent native mutex issues
+    debug_flag = os.getenv("FLASK_DEBUG", "0") == "1"
+    # Bind to 0.0.0.0 so Docker port mapping exposes the service to host
+    app.run(host="0.0.0.0", debug=debug_flag, port=5001, use_reloader=False, threaded=False)
