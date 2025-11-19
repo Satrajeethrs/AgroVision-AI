@@ -158,3 +158,22 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Documentation backups
+*_BACKUP.md
+*_OLD.md
+CHECKLIST*.md
+IMPLEMENTATION*.md
+QUICKSTART_*.md
+*_STATUS.md
+*_SUCCESS.md
+*_MIGRATION.md
+*_FIX.md
+*_REPORT.md
+*_AUDIT.md
+*_CHECKLIST.md
+
+# Temporary scripts
+verify_*.py
+add_*.py
+audit_*.py
