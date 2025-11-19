@@ -13,3 +13,18 @@ requests
 pytest
 tensorflow
 scipy
+
+# PyTorch (required for IndicTrans2)
+torch
+
+# AI4Bharat IndicTrans2 for multilingual translation (NO API KEY REQUIRED)
+# macOS stable versions (avoids native mutex crashes)
+transformers==4.38.0
+tokenizers==0.15.2
+IndicTransToolkit
+sentencepiece
+sacremoses
+# Note: IndicTrans2 has native threading issues on macOS
+# Current workaround: SKIP_INDICTRANS2_MODELS=1 in .env
+# Full translation works via expanded glossary + static keys
+# For Linux/Docker: set SKIP_INDICTRANS2_MODELS=0 to enable dynamic translation

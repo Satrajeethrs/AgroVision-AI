@@ -14,33 +14,48 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h3>🌾 Analysis Results</h3>
+                <h3>🌾 {{ t('nav.report_navigation') }}</h3>
+                <!-- Language Selector in Sidebar -->
+                <div class="language-selector mt-2">
+                    <select id="language-select" class="form-select form-select-sm">
+                        <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                        <option value="hi" {% if session.get('language') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                        <option value="ta" {% if session.get('language') == 'ta' %}selected{% endif %}>தமிழ்</option>
+                        <option value="te" {% if session.get('language') == 'te' %}selected{% endif %}>తెలుగు</option>
+                        <option value="bn" {% if session.get('language') == 'bn' %}selected{% endif %}>বাংলা</option>
+                        <option value="mr" {% if session.get('language') == 'mr' %}selected{% endif %}>मराठी</option>
+                        <option value="kn" {% if session.get('language') == 'kn' %}selected{% endif %}>ಕನ್ನಡ</option>
+                        <option value="ml" {% if session.get('language') == 'ml' %}selected{% endif %}>മലയാളം</option>
+                        <option value="gu" {% if session.get('language') == 'gu' %}selected{% endif %}>ગુજરાતી</option>
+                        <option value="pa" {% if session.get('language') == 'pa' %}selected{% endif %}>ਪੰਜਾਬੀ</option>
+                    </select>
+                </div>
             </div>
             <div class="sidebar-menu">
                 <button class="sidebar-btn active" data-section="executive-summary">
-                    📋 Executive Summary
+                    📋 {{ t('section.executive_summary') }}
                 </button>
                 <button class="sidebar-btn" data-section="crop-recommendation">
-                    🌱 Crop Recommendation
+                    🌱 {{ t('section.crop_recommendation') }}
                 </button>
                 <button class="sidebar-btn" data-section="fertilizer-recommendation">
-                    🧪 Fertilizer Recommendation
+                    🧪 {{ t('section.fertilizer_recommendation') }}
                 </button>
                 <button class="sidebar-btn" data-section="soil-health">
-                    🌿 Soil Health Management
+                    🌿 {{ t('section.soil_health') }}
                 </button>
                 {% if disease_info %}
                 <button class="sidebar-btn" data-section="disease-analysis">
-                    🔍 Disease Analysis
+                    🔍 {{ t('section.disease_analysis') }}
                 </button>
                 {% endif %}
             </div>
             <div class="sidebar-actions">
                 <button class="btn btn-primary w-100 mb-2" onclick="window.location.href='/'">
-                    🔄 New Analysis
+                    🔄 {{ t('btn.new_analysis') }}
                 </button>
                 <button class="btn btn-outline-primary w-100" onclick="printCurrentSection()">
-                    🖨️ Print Current Section
+                    🖨️ {{ t('btn.print_current_section') }}
                 </button>
             </div>
         </div>
@@ -50,7 +65,7 @@
             <!-- Executive Summary Section -->
             <div class="content-section active" id="executive-summary">
                 <div class="section-header">
-                    <h2>📋 Executive Summary</h2>
+                    <h2>📋 {{ t('section.executive_summary') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.executive_summary.content | safe }}
@@ -63,14 +78,14 @@
             {% if advice_sections.ai_narrative %}
             <div class="content-section" id="ai-narrative">
                 <div class="section-header">
-                    <h2>🧾 AI Narrative</h2>
+                    <h2>🧾 {{ t('section.ai_narrative') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.ai_narrative.content | safe }}
                     {% if advice_sections.ai_narrative.meta and advice_sections.ai_narrative.meta.provider %}
                     <div class="ai-meta mt-3 small text-muted">
-                        <div>Provider: <strong>{{ advice_sections.ai_narrative.meta.provider }}</strong></div>
-                        <button class="btn btn-sm btn-outline-secondary mt-2" id="toggle-raw">Show raw response</button>
+                        <div>{{ t('label.provider') }}: <strong>{{ advice_sections.ai_narrative.meta.provider }}</strong></div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" id="toggle-raw">{{ t('button.show_raw') }}</button>
                         <pre id="raw-output" class="mt-2" style="display:none; white-space:pre-wrap; background:#f8f9fa; padding:8px; border-radius:4px;">{{ advice_sections.ai_narrative.meta.raw }}</pre>
                     </div>
                     {% endif %}
@@ -80,10 +95,10 @@
 
             <div class="content-section" id="validation-panel">
                 <div class="section-header">
-                    <h2>🔎 On-demand Validation</h2>
+                    <h2>🔎 {{ t('section.validation') }}</h2>
                 </div>
                 <div class="section-content">
-                    <button id="btn-validate" class="btn btn-primary">Validate recommendations</button>
+                    <button id="btn-validate" class="btn btn-primary">{{ t('button.validate_recommendations') }}</button>
                     <div id="validation-results" class="mt-3"></div>
                 </div>
             </div>
@@ -91,7 +106,7 @@
             <!-- Crop Recommendation Section -->
             <div class="content-section" id="crop-recommendation">
                 <div class="section-header">
-                    <h2>🌱 Crop Recommendation Analysis</h2>
+                    <h2>🌱 {{ t('section.crop_recommendation') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.crop_recommendation.content | safe }}
@@ -109,7 +124,7 @@
             <!-- Fertilizer Recommendation Section -->
             <div class="content-section" id="fertilizer-recommendation">
                 <div class="section-header">
-                    <h2>🧪 Smart Fertilizer Recommendation</h2>
+                    <h2>🧪 {{ t('section.fertilizer_recommendation') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.fertilizer_recommendation.content | safe }}
@@ -122,7 +137,7 @@
             <!-- Soil Health Section -->
             <div class="content-section" id="soil-health">
                 <div class="section-header">
-                    <h2>🌿 Soil Health Management</h2>
+                    <h2>🌿 {{ t('section.soil_health') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.soil_health.content | safe }}
@@ -136,7 +151,7 @@
             {% if disease_info %}
             <div class="content-section" id="disease-analysis">
                 <div class="section-header">
-                    <h2>🔍 Disease Analysis</h2>
+                    <h2>🔍 {{ t('section.disease_analysis') }}</h2>
                 </div>
                 <div class="section-content">
                     {{ advice_sections.disease_analysis.content | safe }}
@@ -148,5 +163,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='results.js') }}"></script>
+    <script>
+        // Language selector functionality
+        const languageSelect = document.getElementById('language-select');
+        if (languageSelect) {
+            languageSelect.addEventListener('change', function() {
+                const selectedLang = this.value;
+                fetch('/set_language', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ language: selectedLang })
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>

@@ -303,17 +303,35 @@ def validate_recommendations(recs: List[Dict[str, Any]], data_summary: Dict[str,
     return {"provider": cfg.name, "raw": raw, "results": parsed}
 
 
-def generate_recommendation_text(recs: List[Dict[str, Any]], data_summary: Dict[str, Any], top_k: int = 1) -> Dict[str, Any]:
+def generate_recommendation_text(recs: List[Dict[str, Any]], data_summary: Dict[str, Any], top_k: int = 1, target_language: str = 'en') -> Dict[str, Any]:
     """Generate a short human-readable recommendation/narrative using the detected provider.
 
     This is a thin wrapper that builds a compact prompt and returns the raw text response
     (or the stub). It is intentionally simple: callers should render the returned text
     as HTML-safe content after sanitizing or trusting the environment.
+    
+    Args:
+        recs: List of recommendations
+        data_summary: Summary of input data
+        top_k: Number of top recommendations to include
+        target_language: Target language code for response (e.g., 'en', 'hi', 'ta')
     """
     cfg = detect_provider()
+    
+    # Build language instruction for multilingual support
+    lang_instruction = ""
+    if target_language != 'en':
+        language_names = {
+            'hi': 'Hindi', 'ta': 'Tamil', 'te': 'Telugu', 'bn': 'Bengali',
+            'mr': 'Marathi', 'kn': 'Kannada', 'ml': 'Malayalam', 
+            'gu': 'Gujarati', 'pa': 'Punjabi', 'or': 'Odia', 'as': 'Assamese'
+        }
+        lang_name = language_names.get(target_language, 'English')
+        lang_instruction = f"Please respond in {lang_name} language. "
+    
     # Reuse a compact prompt pattern
     lines = [
-        "You are an expert agronomist. Create one short, clear recommendation paragraph (2-4 sentences) for a farmer based on the data below.",
+        f"You are an expert agronomist. {lang_instruction}Create one short, clear recommendation paragraph (2-4 sentences) for a farmer based on the data below.",
         "Return plain text only.",
         "DATA_SUMMARY:",
         json.dumps(data_summary, indent=None),
@@ -328,20 +346,37 @@ def generate_recommendation_text(recs: List[Dict[str, Any]], data_summary: Dict[
     # If provider returned an error-like string, fall back to stub
     if isinstance(raw, str) and raw.startswith("[error]"):
         fallback = _stub_response(prompt)
-        return {"provider": cfg.name, "text": fallback, "raw": raw}
-    return {"provider": cfg.name, "text": str(raw), "raw": raw}
+        return {"provider": cfg.name, "text": fallback, "raw": raw, "language": target_language}
+    return {"provider": cfg.name, "text": str(raw), "raw": raw, "language": target_language}
 
 
-def generate_alternative_recommendation(inputs: Dict[str, Any], top_k: int = 1) -> Dict[str, Any]:
+def generate_alternative_recommendation(inputs: Dict[str, Any], top_k: int = 1, target_language: str = 'en') -> Dict[str, Any]:
     """Ask the LLM for an alternative crop recommendation and a short rationale.
 
     We request output as JSON when possible: {"crop": "Maize", "rationale": "..."}
     The function attempts to parse JSON; if parsing fails it returns the raw text under 'rationale'.
+    
+    Args:
+        inputs: Farm input parameters
+        top_k: Number of alternatives (currently only 1 supported)
+        target_language: Target language code for rationale text
     """
     cfg = detect_provider()
+    
+    # Build language instruction for multilingual support
+    lang_instruction = ""
+    if target_language != 'en':
+        language_names = {
+            'hi': 'Hindi', 'ta': 'Tamil', 'te': 'Telugu', 'bn': 'Bengali',
+            'mr': 'Marathi', 'kn': 'Kannada', 'ml': 'Malayalam', 
+            'gu': 'Gujarati', 'pa': 'Punjabi', 'or': 'Odia', 'as': 'Assamese'
+        }
+        lang_name = language_names.get(target_language, 'English')
+        lang_instruction = f"Write the rationale in {lang_name} language. "
+    
     prompt_lines = [
         "You are an expert agronomist.",
-        "Given the following numeric farm inputs, suggest the most suitable crop (single word or short name) and a brief 1-2 sentence rationale.",
+        f"{lang_instruction}Given the following numeric farm inputs, suggest the most suitable crop (single word or short name) and a brief 1-2 sentence rationale.",
         "Return output as a single JSON object with keys: crop, rationale.",
         "INPUTS:",
         json.dumps(inputs, indent=None)

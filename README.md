@@ -452,15 +452,48 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **GitHub**: [@Satrajeeth](https://github.com/Satrajeeth)
 - **Project**: [AgroVision-AI](https://github.com/Satrajeeth/AgroVision-AI)
 
+## 🌐 Multilingual Support
+
+AgroVision-AI now supports **12 Indian languages** powered by AI4Bharat's Bhashini API:
+
+- 🇮🇳 **English** (en) - Default
+- 🇮🇳 **हिन्दी** (hi) - Hindi
+- 🇮🇳 **தமிழ்** (ta) - Tamil
+- 🇮🇳 **తెలుగు** (te) - Telugu
+- 🇮🇳 **বাংলা** (bn) - Bengali
+- 🇮🇳 **मराठी** (mr) - Marathi
+- 🇮🇳 **ಕನ್ನಡ** (kn) - Kannada
+- 🇮🇳 **മലയാളം** (ml) - Malayalam
+- 🇮🇳 **ગુજરાતી** (gu) - Gujarati
+- 🇮🇳 **ਪੰਜਾਬੀ** (pa) - Punjabi
+- 🇮🇳 **ଓଡ଼ିଆ** (or) - Odia
+- 🇮🇳 **অসমীয়া** (as) - Assamese
+
+### Features
+- **Language Selector**: Available in header on every page
+- **Static Translations**: UI labels, buttons, and forms
+- **Dynamic Translation**: Recommendations and advice
+- **LLM Multilingual**: AI-generated content in user's language
+
+### Setup
+Add to your `.env` file:
+```bash
+BHASHINI_API_KEY=your_api_key_here
+ENABLE_TRANSLATION=True
+```
+
+See detailed documentation: [Multilingual Support Guide](docs/MULTILINGUAL.md)
+
 ## 🗺️ Roadmap
 
+- [x] Multi-language support (12 Indian languages)
 - [ ] Mobile application (iOS/Android)
-- [ ] Multi-language support
 - [ ] Weather API integration
 - [ ] Soil testing API integration
 - [ ] Marketplace for agricultural products
 - [ ] Community forum for farmers
 - [ ] Real-time crop monitoring dashboard
+- [ ] Voice input/output in local languages
 
 ---
 
